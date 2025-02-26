@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=1  # Enables hot-reloading in Docker
+    command: nodemon --watch . --ext js,ts,json --exec npm run dev
+
+volumes:
+  node_modules:
