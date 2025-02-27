@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, User, Users, AlertTriangle, Briefcase, Target, Book, Lightbulb, Building2 } from "lucide-react";
 import Papa from "papaparse";
 import type { Mentor, Mentee, MatchWeights } from "@shared/schema";
-import { findBestMatches } from "@/lib/matching";
+// import { findBestMatches } from "@/lib/matching";
 import { UploadAnimation } from "@/components/ui/upload-animation";
 import { MBTI_PAIRINGS } from "../lib/config";
 
@@ -219,8 +219,6 @@ export default function Home() {
   };
 
   const getMatchesForMentee = (mentee: Mentee) => {
-    // const matches = findBestMatches(mentors, mentee, weights);
-    // console.log('matches', matches)
     return mentors.map(match => ({
       ...match,
       matchScore: calculateMatchScore(match, mentee, weights)
@@ -285,24 +283,29 @@ export default function Home() {
 
   const renderMatchScore = (score: number) => {
     const percentage = Math.round((score || 0) * 100);
+    
     const getColor = () => {
       if (percentage >= 80) return "bg-green-500";
       if (percentage >= 60) return "bg-yellow-500";
       return "bg-orange-500";
     };
-
+  
     return (
-      <div className="flex items-center gap-2">
-        <div className="text-sm font-medium">{percentage}% Match</div>
-        <div className="h-2 w-24 bg-muted rounded-full overflow-hidden">
+      <div className="flex items-center gap-3">
+        {/* Bigger & Bolder Score Text */}
+        <div className="text-lg font-bold">{percentage}% Match</div> 
+  
+        {/* Enlarged Progress Bar */}
+        <div className="h-4 w-32 bg-muted rounded-full overflow-hidden shadow-md">
           <div 
-            className={`h-full ${getColor()} transition-all duration-500`}
+            className={`h-full ${getColor()} transition-all duration-500`} 
             style={{ width: `${percentage}%` }}
           />
         </div>
       </div>
     );
   };
+  
 
   return (
     <div className="container mx-auto py-8">
@@ -348,28 +351,34 @@ export default function Home() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Match Weights</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(weights).map(([key, value]) => (
-              <div key={key} className="space-y-2">
-                <label className="block text-sm font-medium capitalize">
-                  {key.replace(/([A-Z])/g, " $1")}
-                </label>
-                <Slider
-                  value={[value]}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  onValueChange={([newValue]) => 
-                    setWeights(w => ({ ...w, [key]: newValue }))
-                  }
-                />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+  <CardHeader>
+    <CardTitle>Match Weights</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    {Object.entries(weights).map(([key, value]) => (
+      <div key={key} className="space-y-2">
+        <div className="flex justify-between items-center">
+          <label className="block text-sm font-medium capitalize">
+            {key.replace(/([A-Z])/g, " $1")}
+          </label>
+          <span className="text-sm font-medium text-muted-foreground">
+            {(value*10).toFixed(0)}
+          </span>
+        </div>
+        <Slider
+          value={[value]}
+          min={0}
+          max={1}
+          step={0.1}
+          onValueChange={([newValue]) =>
+            setWeights(w => ({ ...w, [key]: newValue }))
+          }
+        />
+      </div>
+    ))}
+  </CardContent>
+</Card>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -401,9 +410,9 @@ export default function Home() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-muted-foreground" />
                       <div className="font-medium">{mentee.last_work_role}</div>
                     </div>
+                    <div className="text-sm text-muted-foreground">{mentee.last_work_role}</div>
                     <div className="mt-2 space-y-2">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4" />
@@ -470,7 +479,10 @@ export default function Home() {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="font-medium">{mentor.last_work_role}</div>
+                              <div>
+                                <div className="font-medium text-lg">{mentor.last_work_role}</div>
+                                <div className="text-sm text-muted-foreground">{mentor.last_work_role}</div>
+                              </div>
                             </div>
                             {renderMatchScore(mentor.matchScore)}
                           </div>
