@@ -7,9 +7,10 @@ export const mentors = pgTable("mentors", {
   last_work_role: text("last_work_role").notNull(),
   skills: text("skills").array().notNull(),
   max_match: integer("max_match").notNull(),
-  interests: text("interests").array().notNull(),
+  experience: text("experience").notNull(),
   industry_specific_needs: text("industry_specific_needs").array().notNull(),
   location: text("location").notNull(),
+  name: text("name").notNull(),
   mbti: text("mbti").notNull(),
 });
 
@@ -18,9 +19,10 @@ export const mentees = pgTable("mentees", {
   career_goals: text("career_goals").array().notNull(),
   preferred_skills: text("preferred_skills").array().notNull(),
   industry_specific_needs: text("industry_specific_needs").array().notNull(),
-  interests: text("interests").array().notNull(),
+  experience: text("experience").notNull(),
   last_work_role: text("last_work_role").notNull(),
   location: text("location").notNull(),
+  name: text("name").notNull(),
   mbti: text("mbti").notNull(),
 });
 
@@ -35,7 +37,7 @@ export type Mentee = typeof mentees.$inferSelect;
 export const matchWeightSchema = z.object({
   skills: z.number().min(0).max(1),
   location: z.number().min(0).max(1),
-  interests: z.number().min(0).max(1),
+  experience: z.number().min(0).max(1),
   industryNeeds: z.number().min(0).max(1),
   mbti: z.number().min(0).max(1),
 });

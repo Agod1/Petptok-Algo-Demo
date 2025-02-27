@@ -29,7 +29,7 @@ export function calculateMatch(mentor: Mentor, mentee: Mentee, weights: MatchWei
   }
 
   // Experience Level Difference (mentor's experience levels should be greater than mentee's)
-  score += (mentor.experience_Level > mentee.experience_Level ? 1 : 0) * weights.experience_Level;
+  score += (mentor.experience > mentee.experience ? 1 : 0) * weights.experience;
 
   // Return score
   return score;
@@ -42,6 +42,5 @@ export function findBestMatches(mentors: Mentor[], mentee: Mentee, weights: Matc
   }));
 
   return matches
-    .sort((a, b) => b.score - a.score)
     .map(m => m.mentor);
 }

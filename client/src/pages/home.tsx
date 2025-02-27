@@ -10,15 +10,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Upload, User, Users, AlertTriangle, Briefcase, Target, Book, Lightbulb, Building2 } from "lucide-react";
+import { Upload, User, Users, AlertTriangle, Briefcase, Target, Book, Lightbulb, Building2, Factory, MapPin } from "lucide-react";
 import Papa from "papaparse";
 import type { Mentor, Mentee, MatchWeights } from "@shared/schema";
 // import { findBestMatches } from "@/lib/matching";
 import { UploadAnimation } from "@/components/ui/upload-animation";
 import { MBTI_PAIRINGS } from "../lib/config";
 
-const REQUIRED_MENTOR_FIELDS = ['last_work_role', 'skills', 'interests', 'industry_specific_needs', 'max_match'];
-const REQUIRED_MENTEE_FIELDS = ['last_work_role', 'career_goals', 'preferred_skills', 'interests', 'industry_specific_needs'];
+const REQUIRED_MENTOR_FIELDS = ['last_work_role', 'skills', 'experience', 'industry_specific_needs'];
+const REQUIRED_MENTEE_FIELDS = ['last_work_role', 'career_goals', 'preferred_skills', 'experience', 'industry_specific_needs'];
 
 type UploadStatus = "idle" | "uploading" | "success" | "error";
 type MatchResult = Mentor & { matchScore: number };
@@ -67,7 +67,7 @@ export default function Home() {
   const [weights, setWeights] = useState<MatchWeights>({
     skills: 0.5,
     location: 0.2,
-    interests: 0.1,
+    experience: 0.1,
     industryNeeds: 0.1,
     mbti: 0.1
   });
@@ -219,6 +219,7 @@ export default function Home() {
   };
 
   const getMatchesForMentee = (mentee: Mentee) => {
+    console.log('mentee', mentee)
     return mentors.map(match => ({
       ...match,
       matchScore: calculateMatchScore(match, mentee, weights)
@@ -234,8 +235,8 @@ export default function Home() {
         return (commonSkills / totalSkills) * weights.skills;
     })();
 
-    // Interests match (binary match)
-    const interestsMatch = mentor.interests.some(interest => mentee.interests.includes(interest)) ? weights.interests : 0;
+    // experience level match (binary match)
+    const experienceMatch = mentor.experience > mentee.experience ? weights.experience : 0;
 
     // Industry-specific needs match (binary match)
     const industryMatch = mentor.industry_specific_needs.some(need => mentee.industry_specific_needs.includes(need)) 
@@ -262,15 +263,16 @@ export default function Home() {
     const locationMatch = mentor.location === mentee.location ? weights.location : 0;
 
     // Calculate Total Match Percentage
-    const totalScore = skillsMatch + interestsMatch + industryMatch + mbtiMatch + locationMatch;
-    const maxPossibleScore = weights.skills + weights.interests + weights.industryNeeds + weights.mbti + weights.location;
+    const totalScore = skillsMatch + experienceMatch + industryMatch + mbtiMatch + locationMatch;
+    const maxPossibleScore = weights.skills + weights.experience + weights.industryNeeds + weights.mbti + weights.location;
 
     return (totalScore / maxPossibleScore); // Convert to percentage
 };
 
 
   const renderSkillBadges = (skills: string[]) => {
-    return (
+    if (skills) {
+          return (
       <div className="flex flex-wrap gap-1 mt-1">
         {skills.map((skill, index) => (
           <Badge key={index} variant="secondary" className="text-xs">
@@ -279,7 +281,9 @@ export default function Home() {
         ))}
       </div>
     );
-  };
+    }
+    return (<div className="flex flex-wrap gap-1 mt-1"></div>)
+};
 
   const renderMatchScore = (score: number) => {
     const percentage = Math.round((score || 0) * 100);
@@ -344,8 +348,8 @@ export default function Home() {
             </div>
             <div className="text-sm text-muted-foreground">
               <p className="font-medium mb-2">Required fields:</p>
-              <p><strong>Mentors:</strong> {REQUIRED_MENTOR_FIELDS.join(", ")}</p>
-              <p><strong>Mentees:</strong> {REQUIRED_MENTEE_FIELDS.join(", ")}</p>
+              <p><strong>Mentors:</strong> {REQUIRED_MENTOR_FIELDS.map(field => field.replace(/_/g, " ")).join(", ")}</p>
+              <p><strong>Mentees:</strong> {REQUIRED_MENTEE_FIELDS.map(field => field.replace(/_/g, " ")).join(", ")}</p>
             </div>
           </CardContent>
         </Card>
@@ -410,37 +414,66 @@ export default function Home() {
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <div className="font-medium">{mentee.last_work_role}</div>
+                      <div className="font-medium">{mentee.name}</div>
                     </div>
                     <div className="text-sm text-muted-foreground">{mentee.last_work_role}</div>
                     <div className="mt-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        <span>MBTI:</span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                          <Badge variant="secondary" className="text-xs">
-                          {mentee?.mbti}
-                          </Badge>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>Ideal Mentor's MBTI:</span>
-                      </div>
-                      {renderSkillBadges(MBTI_PAIRINGS[mentee.mbti])}
-                      
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Target className="h-4 w-4" />
-                        <span>Career Goals:</span>
-                      </div>
-                      {renderSkillBadges(mentee.career_goals)}
 
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Book className="h-4 w-4" />
-                        <span>Preferred Skills:</span>
-                      </div>
-                      {renderSkillBadges(mentee.preferred_skills)}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Target className="h-4 w-4" />
+                      <span>Career Goals:</span>
                     </div>
+                    {renderSkillBadges(mentee.career_goals)}
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Book className="h-4 w-4" />
+                      <span>Preferred Skills:</span>
+                    </div>
+                    {renderSkillBadges(mentee.preferred_skills)}
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span>Years of Experience:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {mentee?.experience}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Factory className="h-4 w-4" />
+                      <span>Industry-Specific Needs:</span>
+                    </div>
+                    {renderSkillBadges(mentee.industry_specific_needs)}
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>Location:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {mentee?.location}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      <span>MBTI:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Badge variant="secondary" className="text-xs">
+                        {mentee?.mbti}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>Ideal Mentor's MBTI:</span>
+                    </div>
+                    {renderSkillBadges(MBTI_PAIRINGS[mentee.mbti])}
+                  </div>
+
                   </div>
                 </div>
               ))}
@@ -458,6 +491,7 @@ export default function Home() {
           <CardContent>
             <ScrollArea className="h-[500px] pr-4">
               {Array.from(selectedMentees).map(menteeId => {
+                console.log('selectedMentees', selectedMentees);
                 const mentee = mentees.find(m => m.id === menteeId);
                 if (!mentee) return null;
 
@@ -467,12 +501,12 @@ export default function Home() {
                     <div className="flex items-center gap-2 mb-4">
                       <Briefcase className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-lg">
-                        Matches for {mentee.last_work_role}
+                        Matches for {mentee.name} ({mentee.last_work_role})
                       </h3>
                     </div>
 
                     <div className="space-y-4">
-                      {matches.slice(0, 3).map((mentor, index) => (
+                      {matches.sort((a, b) => b.matchScore - a.matchScore).slice(0, 3).map((mentor, index) => (
                         <div 
                           key={mentor.id} 
                           className="p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
@@ -480,7 +514,7 @@ export default function Home() {
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-2">
                               <div>
-                                <div className="font-medium text-lg">{mentor.last_work_role}</div>
+                                <div className="font-medium text-lg">{mentor.name}</div>
                                 <div className="text-sm text-muted-foreground">{mentor.last_work_role}</div>
                               </div>
                             </div>
@@ -490,40 +524,55 @@ export default function Home() {
                           <Separator className="my-3" />
 
                           <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Users className="h-4 w-4" />
-                              <span>MBTI:</span>
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                                <Badge variant="secondary" className="text-xs">
-                                {mentor?.mbti}
-                                </Badge>
-                            </div>
 
-                            <div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                                <Book className="h-4 w-4" />
-                                <span>Skills</span>
+                              <div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                                  <Factory className="h-4 w-4" />
+                                  <span>Industry Experience:</span>
+                                </div>
+                                {renderSkillBadges(mentor.industry_specific_needs)}
                               </div>
-                              {renderSkillBadges(mentor.skills)}
-                            </div>
 
-                            <div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                                <Lightbulb className="h-4 w-4" />
-                                <span>Interests</span>
-                              </div>
-                              {renderSkillBadges(mentor.interests)}
-                            </div>
-
-                            <div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Building2 className="h-4 w-4" />
-                                <span>Industry Experience</span>
+                                <span>Years of Experience:</span>
                               </div>
-                              {renderSkillBadges(mentor.industry_specific_needs)}
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {mentor?.experience}
+                                </Badge>
+                              </div>
+
+                              <div>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                                  <Book className="h-4 w-4" />
+                                  <span>Skills:</span>
+                                </div>
+                                {renderSkillBadges(mentor.skills)}
+                              </div>
+
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <MapPin className="h-4 w-4" />
+                                <span>Location:</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {mentor?.location}
+                                </Badge>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Users className="h-4 w-4" />
+                                <span>MBTI:</span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <Badge variant="secondary" className="text-xs">
+                                  {mentor?.mbti}
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
+
+                            
                         </div>
                       ))}
                     </div>
