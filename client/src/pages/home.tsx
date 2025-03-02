@@ -67,9 +67,9 @@ export default function Home() {
   const [weights, setWeights] = useState<MatchWeights>({
     skills: 0.5,
     location: 0.2,
-    experience: 0.1,
-    industryNeeds: 0.1,
-    mbti: 0.1
+    experience: 0.3,
+    industryNeeds: 0.4,
+    mbti: 0.3
   });
 
   const { data: mentors = [] } = useQuery<Mentor[]>({ 
@@ -283,26 +283,36 @@ export default function Home() {
     );
     }
     return (<div className="flex flex-wrap gap-1 mt-1"></div>)
-};
+  };
 
   const renderMatchScore = (score: number) => {
     const percentage = Math.round((score || 0) * 100);
-    
-    const getColor = () => {
-      if (percentage >= 80) return "bg-green-500";
-      if (percentage >= 60) return "bg-yellow-500";
-      return "bg-orange-500";
+  
+    const getColor = (type: "bg" | "text") => {
+      if (percentage >= 90) return type === "bg" ? "bg-green-600" : "text-green-600";
+      if (percentage >= 80) return type === "bg" ? "bg-green-500" : "text-green-500";
+      if (percentage >= 70) return type === "bg" ? "bg-green-400" : "text-green-400";
+      if (percentage >= 60) return type === "bg" ? "bg-yellow-600" : "text-yellow-600";
+      if (percentage >= 50) return type === "bg" ? "bg-yellow-400" : "text-yellow-400";
+      if (percentage >= 40) return type === "bg" ? "bg-orange-500" : "text-orange-500";
+      if (percentage >= 30) return type === "bg" ? "bg-orange-400" : "text-orange-400";
+      return type === "bg" ? "bg-red-600" : "text-red-600";
     };
+    
+    
   
     return (
       <div className="flex items-center gap-3">
         {/* Bigger & Bolder Score Text */}
-        <div className="text-lg font-bold">{percentage}% Match</div> 
+        <div className="text-lg font-bold">
+          <span className={`${getColor("text")}`}>{percentage}%</span>{" "}
+          <span className="text-gray-700">Match</span>
+        </div>
   
         {/* Enlarged Progress Bar */}
-        <div className="h-4 w-32 bg-muted rounded-full overflow-hidden shadow-md">
-          <div 
-            className={`h-full ${getColor()} transition-all duration-500`} 
+        <div className="h-4 w-32 bg-gray-200 rounded-full overflow-hidden shadow-md">
+          <div
+            className={`h-full transition-all duration-500 ${getColor("bg")}`}
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -310,7 +320,7 @@ export default function Home() {
     );
   };
   
-
+  
   return (
     <div className="container mx-auto py-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -366,14 +376,14 @@ export default function Home() {
             {key.replace(/([A-Z])/g, " $1")}
           </label>
           <span className="text-sm font-medium text-muted-foreground">
-            {(value*10).toFixed(0)}
+            {(value*5).toFixed(0)}
           </span>
         </div>
         <Slider
           value={[value]}
           min={0}
           max={1}
-          step={0.1}
+          step={0.2}
           onValueChange={([newValue]) =>
             setWeights(w => ({ ...w, [key]: newValue }))
           }
@@ -485,7 +495,7 @@ export default function Home() {
           <CardHeader>
             <CardTitle>Matches</CardTitle>
             <CardDescription>
-              Best mentor matches for selected mentees
+              Top 3 mentor matches for selected mentees
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -501,8 +511,9 @@ export default function Home() {
                     <div className="flex items-center gap-2 mb-4">
                       <Briefcase className="h-5 w-5 text-primary" />
                       <h3 className="font-semibold text-lg">
-                        Matches for {mentee.name} ({mentee.last_work_role})
+                        Matches for {mentee.name}
                       </h3>
+                      <div className="text-sm text-muted-foreground">{mentee.last_work_role}</div>
                     </div>
 
                     <div className="space-y-4">
